@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<style>
+html, body
+{
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	overflow: auto;
+}
+
+.txtHead
+{
+	font-size: 0.35in;
+}
+.txtLarge
+{
+	font-size: 0.5in;
+}
+.txtList, .taskList th, .taskList td
+{
+	font-size: 0.25in;
+}
+.txtMedium, .normalLink, .backLink
+{
+	font-size: 0.28in;
+}
+.txtSmall
+{
+	font-size: 0.218in;
+}
+.goDate
+{
+	font-family: tahoma;
+	display: inline-block;
+	border: solid #ddd 1px;
+	border-radius: 10px;
+	background: #f7f7f7;
+	color: #000;
+	padding: 0.16in 0.2in;
+	-ms-transform: translateY(+50%);
+	transform: translateY(+50%);
+}
+.xYear
+{
+	display: block;
+	font-family: tahoma;
+	position: relative;
+	color: #a3a3a3;
+	top: 1.05in;
+	text-align: center;
+}
+
+.qr_head
+{
+	text-align: center;
+	background: #f3f3f3;
+	padding: 8px;
+	margin: 5px;
+}
+.qr_pane
+{
+	width: 100%;
+	position: relative;
+	padding-bottom: 0.2in;
+}
+.qr_pane td
+{
+	text-align: center;
+	font-family: Consolas;
+}
+.container
+{
+	position: relative;
+}
+.center {
+	margin: 0;
+	position: absolute;
+	left: 50%;
+	width: 100%;
+	-ms-transform: translate(-50%, 0%);
+	transform: translate(-50%, 0%);
+}
+.dateBox
+{
+	display: inline-block;
+	background: white;
+	border: solid black 2.6px;
+	border-radius: 10.6px;
+	
+	width: 110px;
+	min-height: 120px;
+	margin: 0.15in 0.8in 0.45in 0.8in;
+	position: relative;
+}
+.xMonth
+{
+	display: block;
+	background: red;
+	border-radius: 8px 8px 0 0;
+
+	min-width: 80px;
+	min-height: 24px;
+}
+.xMonth p
+{
+	display: inline-block;
+	font-family: Tahoma;
+	color: #fff;
+	margin: 3pt 0 6pt 0;
+}
+.xDate
+{
+	display: block;
+	font-family: Tahoma;
+	position: absolute;
+
+	top: 50%;
+	left: 50%;
+	-ms-transform: translate(-50%,-22%);
+	transform: translate(-50%,-22%);
+}
+.taskList
+{
+	margin: 0 10px;
+	border-collapse: collapse;
+}
+
+.qr_pane td
+{
+}
+
+.taskList th
+{
+	padding: 10px;
+}
+.taskList td
+{
+	border: solid silver 1px;
+	padding: 10px;
+	min-width: 120px;
+	text-align: center;
+}
+.taskList td a
+{
+	padding: 10px 10px;
+	color: #00e
+}
+.xBatch
+{
+}
+a
+{ text-decoration:none; }
+a:hover
+{ text-decoration:underline; }
+#qrList
+{
+	margin: 20px;
+}
+#qrListEmpty
+{
+	margin: 40px 20px;
+}
+#btnBack, .normalLink
+{
+	margin:0px 4px;padding:8px 14px
+}
+.topPad
+{
+	background:red;
+	width: 4in;
+	height: 4in;
+}
+.linkPad
+{
+	margin: 5px;
+	z-index: 1;
+}
+
+tr.qrHead
+{
+	padding: 0 0 0.1in 0;
+}
+th.qrVer
+{
+	padding: 0.5in 0 0.1in 0;
+}
+tr.qrVer
+{
+	padding: 1in;
+}
+th.qrHor
+{
+	padding: 0.3in 0 0.1in 0;
+}
+</style>
+<script>
+var arrMonth = [ "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" ];
+var arrIdImg = [ "img01", "img02", "img03", "img04", "img05", "img06" ];
+var arrIdLbl = [ "lbl01", "lbl02", "lbl03", "lbl04", "lbl05", "lbl06" ];
+var cur = -1;
+var dbg = 0;
+var op = '';
+var duty = '';
+var curMode = 0;
+var lastTxt = '';
+var lastHead = '';
+var htmlQrHor = '';
+var htmlQrVer = '';
+
+function fpDirection()
+{
+	var nextMode; // 0:hor / 1: ver
+	if(window.innerHeight > window.innerWidth)
+	{
+		nextMode = 1;
+	}
+	else
+	{
+		nextMode = 0;
+	}
+	
+	if(curMode != nextMode)
+	{
+		curMode = nextMode;
+		console.log('switch to mode: ' + nextMode);
+		switchDirection(curMode);
+	}
+}
+
+function switchDirection(nextMode)
+{
+	var tx = "";
+	if(nextMode) // ver
+	{
+		tx = htmlQrVer;
+	}
+	else // hor
+	{
+		tx = htmlQrHor;
+	}
+	var r01 = document.getElementById('qrRow01');
+	r01.innerHTML = tx;
+
+	if(nextMode) // ver
+	{
+		tx = htmlQrVer2;
+	}
+	else // hor
+	{
+		tx = htmlQrHor2;
+	}
+	var r02 = document.getElementById('qrRow02');
+	r02.innerHTML = tx;
+
+	asyncEntry(lastTxt);
+	asyncHead(lastHead);
+}
+
+function makeQrVer()
+{
+	var tx = "";
+	tx += ('<tr class="qrHead"><th class="qrVer txtMedium">Part</th></tr>');
+	tx += ('<tr><td><img id="img01" src=""></td></tr>');
+	tx += ('<tr><td id="lbl01"></td></tr>');
+
+	tx += ('<tr class="qrHead"><th class="qrVer txtMedium">Batch</th></tr>');
+	tx += ('<tr><td><img id="img02" src=""></td></tr>');
+	tx += ('<tr><td id="lbl02"></td></tr>');
+
+	tx += ('<tr class="qrHead"><th class="qrVer txtMedium">Operator</th></tr>');
+	tx += ('<tr><td><img id="img03" src=""></td></tr>');
+	tx += ('<tr><td id="lbl03"></td></tr>');
+	return tx;
+}
+function makeQrVer2()
+{
+	var tx = "";
+	tx += ('<tr class="qrHead"><th class="qrVer txtMedium" id="head04">Extra01</th></tr>');
+	tx += ('<tr><td><img id="img04" src=""></td></tr>');
+	tx += ('<tr><td id="lbl04"></td></tr>');
+
+	tx += ('<tr class="qrHead"><th class="qrVer txtMedium" id="head05">Extra02</th></tr>');
+	tx += ('<tr><td><img id="img05" src=""></td></tr>');
+	tx += ('<tr><td id="lbl05"></td></tr>');
+
+	tx += ('<tr class="qrHead"><th class="qrVer txtMedium" id="head06">Extra03</th></tr>');
+	tx += ('<tr><td><img id="img06" src=""></td></tr>');
+	tx += ('<tr><td id="lbl06"></td></tr>');
+	return tx;
+}
+
+function initQr()
+{
+	htmlQrHor = document.getElementById('qrRow01').innerHTML;
+	htmlQrVer = makeQrVer();
+	htmlQrHor2 = document.getElementById('qrRow02').innerHTML;
+	htmlQrVer2 = makeQrVer2();
+	setInterval(fpDirection, 500);
+
+	//var myJSON = '{"PartNo": "18", "age": 31, "city": "New York"}';
+	//var myObj = JSON.parse(myJSON);
+	//console.log(myObj.PartNo)
+	
+	var qs = location.search;
+	if(qs.length > 0 && qs.charAt(0) == '?')
+	{
+		qs = qs.substring(1);
+	}
+	var pairs = qs.split('&');
+	var query = [];
+	for (var i = 0; i < pairs.length; i++) {
+        var pair = pairs[i].split('=');
+        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+    }
+	dbg = query['dbg'];
+	op = query['op'];
+	duty = query['duty'];
+	if('0' == dbg) dbg = false;
+	if(!duty) duty='';
+	
+	// ensure op is set
+	if(! op)
+	{
+		setTimeout(function(){ location.assign('/f/index.html'); }, 666);
+		return;
+	}
+	
+	
+	if(dbg)
+	{
+		console.info('query: ?' + qs);
+		console.info('op is: ' + query['op']);
+		console.info('sel is: ' + query['sel']);
+	}
+	var strSel = query['sel'];
+	if(strSel)
+	{
+		cur = parseInt(strSel);
+	}
+
+	var strDuty = duty;
+	strDuty = fixDate(strDuty);
+	
+	if(strDuty == 'all')
+	{
+		loadDoc('/l/' + op);
+	}
+	else
+	{
+		loadDoc('/l/' + op + '?date=' + strDuty);
+	}
+	loadHead('/l/head/');
+}
+function fixDate(strDuty)
+{
+	if(!strDuty)
+	{
+		var dt = new Date();
+		strDuty = dateToStr(dt);
+	}
+	return strDuty;
+}
+
+function dateToStr(dt)
+{
+	return dt.getFullYear() + '-' + pad_Z2(1 + dt.getMonth()) + '-' + pad_Z2(dt.getDate());
+}
+function pad_Z2(n)
+{
+	return (n >= 10) ? ('' + n) : ('0' + n);
+}
+
+
+function asyncEntry(txt)
+{
+	if(cur >= 0)
+	{
+		qrAssign(txt);
+		document.getElementById('pane01').style.display = 'block';
+		document.getElementById('btnBack').style.display = 'block';
+	}
+	else
+	{
+		showQrList(txt);
+	}
+}
+function asyncHead(txt)
+{
+	var objHead = JSON.parse(txt);
+	var cnt = parseInt(objHead.Count);
+	assignHead('head04', objHead.Extra_01, 'img04', 'lbl04', (cnt >= 5));
+	assignHead('head05', objHead.Extra_02, 'img05', 'lbl05', (cnt >= 6));
+	assignHead('head06', objHead.Extra_03, 'img06', 'lbl06', (cnt >= 7));
+}
+function assignHead(h, v, img, lbl, bShow)
+{
+	var eHead = document.getElementById(h);
+	var eImg = document.getElementById(img);
+	var eLbl = document.getElementById(lbl);
+	
+	var vShow = (bShow) ? '' : 'none';
+	eHead.style.display = vShow;
+	eImg.style.display = vShow;
+	eLbl.style.display = vShow;
+	
+	var par = eImg.parentElement;
+	if(par.style)
+	{
+		par.style.display = vShow;
+	}
+	eHead.innerHTML = (v);
+}
+
+function showQrList(txt)
+{
+	var objArr = JSON.parse(txt);
+	var i;
+	var ele = document.getElementById('qrList');
+	var empty = document.getElementById('qrListEmpty');
+
+	var tx = '<table class="taskList">'
+	tx += '<th>Part</th>'
+	tx += '<th>Batch</th>'
+	tx += '<th>Operator</th>'
+	tx += '<th>Date</th>'
+	for(i = 0; i < objArr.length; i++)
+	{
+		var o = objArr[i];
+		tx += toCellLink(i, o) + '\r\n';
+		console.info(o);
+	}
+	tx += '</table>'
+
+	if(objArr.length > 0)
+	{
+		ele.style.display = 'block'
+	}
+	else
+	{
+		empty.style.display = 'block'
+	}
+	
+	var oneDay = 86400 * 1000;
+	var dateBar = '<div style="margin:8px;">'
+	var vFirst = linkForDate(op, duty, -oneDay, '< Last&nbsp;');
+	dateBar += vFirst;
+	if(vFirst)
+	{
+		dateBar += makeCalendarDate(duty);
+	}
+	dateBar += linkForDate(op, duty, +oneDay, '&nbsp;Next >');
+	dateBar += '</div>'
+	var eleDate = document.getElementById('datePane');
+	eleDate.innerHTML = dateBar;
+	eleDate.style.display = 'block';
+
+	ele.innerHTML = tx;
+}
+
+function makeCalendarDate(duty)
+{
+	var strDuty = fixDate(duty);
+	if(duty == 'all') return '';
+	
+	var dt = new Date(strDuty);
+	
+	var nMonth = dt.getMonth();
+	var mStr = arrMonth[nMonth] + ' / ' + (1 + nMonth);
+	var dStr = dt.getDate();
+	var v = '<span>'
+	v += '<span class="dateBox"><span class="xMonth"><p class="txtSmall">' + mStr + '</p></span><span class="xDate txtLarge">' + dStr + '</span>';
+	v += '<span class="xYear txtSmall">' + dt.getFullYear() + '</span>'
+	v += '</span>'
+	v += '</span>'
+	return v;
+}
+
+function toCellLink(idx, o)
+{
+	var t = '';
+	t += '<tr>';
+	t += '<td>' + o.Part + '</td>';
+	t += '<td>' + justLink(idx, o) + '</td>';
+	t += '<td>' + o.Operator + '</td>';
+	t += '<td>' + o.Duty + '</td>';
+	t += '</tr>';
+	return t;
+}
+function justLink(idx, o)
+{
+	//console.info(location);
+	var loc = location.pathname;
+	var strDuty = '';
+	strDuty = ('&duty=' + fixDate(duty));
+	var h = loc + '?op=' + o.Operator + strDuty + '&sel=' + idx;
+	return '<a class="xBatch" href="' + h +'">' + o.Batch + '</a>';
+}
+function linkForDate(op, duty, nPad, note)
+{
+	var strDuty = fixDate(duty);
+	if(duty == 'all') return '';
+	
+	var dt = new Date(strDuty);
+	var dtPadded = new Date(dt.getTime() + nPad);
+	var strPadded = dateToStr(dtPadded);
+
+	var loc = location.pathname;
+	var h = loc + '?op=' + op + '&duty=' + strPadded;
+	return '<a class="goDate txtSmall" href="' + h + '">' + note + '</a>';
+}
+
+var lastObj = 'N/A'
+function qrAssign(txt)
+{
+	var objArr = JSON.parse(txt);
+	var o = objArr[cur];
+	dbg=1
+	if(dbg)
+	{
+		console.info('-- objArr --');
+		console.info(objArr);
+
+		console.info('-- cur = ' + cur + ' --');
+		console.info(o);
+	}
+	
+	lastObj = o;
+	var i;
+	for(i = 0; i < 6; i++)
+	{
+		var eImg = document.getElementById(arrIdImg[i]);
+		var eLbl = document.getElementById(arrIdLbl[i]);
+
+		var txtRaw = "";
+		
+		try
+		{
+			switch(i)
+			{
+				case 0: txtRaw = o.Part; break;
+				case 1: txtRaw = o.Batch; break;
+				case 2: txtRaw = o.Operator; break;
+				case 3: txtRaw = o.Extra_01; break;
+				case 4: txtRaw = o.Extra_02; break;
+				case 5: txtRaw = o.Extra_03; break;
+			}
+			eLbl.classList.add('txtMedium')
+			//console.info('raw: ' + i + ' = ' + txtRaw);
+		}
+		catch(ex)
+		{
+			return;
+		}
+		if(! txtRaw) continue;
+		
+		var txtPath = "/q/" + txtRaw;
+		eImg.src = txtPath;
+		eLbl.innerHTML = txtRaw;
+	}
+}
+
+function loadDoc(uri) {
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var txt = this.responseText;
+			lastTxt = txt;
+			asyncEntry(txt);
+		}
+	};
+	xhttp.open("GET", uri, true);
+	xhttp.send();
+}
+function loadHead(uri)
+{
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var txt = this.responseText;
+			lastHead = txt;
+			asyncHead(txt);
+		}
+	};
+	xhttp.open("GET", uri, true);
+	xhttp.send();
+}
+
+function goBack() {
+	window.history.back();
+}
+
+function myHome()
+{
+	var operStr = (!op) ? "" : ("?op=" + op);
+	location.assign('/f/operator.html' + operStr);
+}
+function myTop()
+{
+	location.assign('/f/index.html');
+}
+function myAllOrder()
+{
+	var operStr = (!op) ? "" : ("?op=" + op);
+	location.assign('/f/operator.html' + operStr + '&duty=all');
+}
+</script>
+</head>
+
+<body onload="initQr()">
+
+<table style="width:100%"><!-- top lv-->
+<tr><!-- top lv-->
+<td><!-- top lv-->
+
+<div onclick="myHome()">
+<h1 class="qr_head txtHead">Virtual QR
+</h1>
+<span style="float:right">
+<a href="javascript:goBack()" id="btnBack" class="backLink" style="display:none">&lt;&nbsp;Back&nbsp;</a>
+</span>
+<span style="float:left" class="linkPad">
+<a href="javascript:myTop()" class="normalLink">Top</a>
+<a href="javascript:myAllOrder()" class="normalLink">All Order</a>
+<a href="javascript:myHome()" class="normalLink">Today's Order</a>
+</span>
+</div>
+
+</td><!-- top lv-->
+</tr><!-- top lv-->
+
+<tr><!-- top lv-->
+<td><!-- top lv-->
+
+<center>
+<div id="datePane" style="display:none">
+</div>
+<div id="qrList" style="display:none">
+</div>
+<div id="qrListEmpty" style="display:none" class="txtSmall">
+No Order.
+</div>
+</center>
+
+<div id="pane01" class="center" style="display:none">
+
+<table class="qr_pane" id="qrRow01">
+<tr class="qrHead">
+<th class="txtMedium qrHor">Part</td>
+<th class="txtMedium qrHor">Batch</th>
+<th class="txtMedium qrHor">Operator</th>
+<tr/>
+<tr>
+<td><img id="img01" src=""></td>
+<td><img id="img02" src=""></td>
+<td><img id="img03" src=""></td>
+<tr/>
+<tr class="off">
+<td id="lbl01"></td>
+<td id="lbl02"></td>
+<td id="lbl03"></td>
+<tr/>
+</table>
+
+<table class="qr_pane" id="qrRow02">
+<tr class="qrHead">
+<th class="txtMedium qrHor" id="head04">Extra01</td>
+<th class="txtMedium qrHor" id="head05">Extra02</th>
+<th class="txtMedium qrHor" id="head06">Extra03</th>
+<tr/>
+<tr>
+<td><img id="img04" src=""></td>
+<td><img id="img05" src=""></td>
+<td><img id="img06" src=""></td>
+<tr/>
+<tr class="off">
+<td id="lbl04"></td>
+<td id="lbl05"></td>
+<td id="lbl06"></td>
+<tr/>
+</table>
+
+</div>
+
+</td><!-- top lv-->
+</tr><!-- top lv-->
+</table><!-- top lv-->
+
+</body>
+
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<style>
+html, body
+{
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	overflow: auto;
+}
+.txtHead
+{
+	font-size: 0.35in;
+}
+.txtSmall
+{
+	font-size: 0.218in;
+}
+.qr_head
+{
+	text-align: center;
+	background: #f3f3f3;
+	padding: 8px;
+	margin: 5px;
+}
+.xForm
+{
+	padding: 2% 1%;
+	margin: 10% 0;
+	background: #f3f3ff;
+}
+.xForm th, .xForm td
+{
+	padding: 6px;
+}
+input.pad
+{
+	padding: 4px 6px;
+}
+</style>
+<script>
+var lead = 'OperatorId=';
+function initOperId()
+{
+	var strCookie = document.cookie;
+	var ele = document.getElementById('op');
+	
+	var arrTok = strCookie.split(';');
+	var i;
+	var strOp = '';
+	for(i = 0 ; i < arrTok.length; i++)
+	{
+		var tok = arrTok[i];
+		var idx = tok.indexOf(lead);
+		if(idx >= 0)
+		{
+			strOp = tok.substring(idx + lead.length);
+		}
+	}
+	
+	var q = location.search;
+	if(0 == q.indexOf('?op='))
+	{
+		ele.value = q.substring(4);
+	}
+	else
+	{
+		ele.value = strOp;
+	}
+}
+function logOperId(v)
+{
+	var ele = document.getElementById('op');
+	document.cookie = lead + (ele.value);
+	return true;
+}
+</script>
+</head>
+
+<body onload="initOperId()">
+<div>
+<h1 class="qr_head txtHead">Virtual QR
+</h1>
+</div>
+
+<div>
+<form action="/f/operator.html" method="GET" onsubmit="return logOperId(this);">
+<center>
+<table class="xForm">
+<tr>
+<th class="txtSmall">Operator ID:</th>
+<td><input class="pad txtSmall" type="text" name="op" id="op" /></td>
+</tr>
+<tr>
+<td colspan="2">
+<input type="submit" class="txtSmall" style="width:100%;height:48px;margin-top: 10px" value="Enter" />
+</td>
+</tr>
+</table>
+</center>
+</form>
+</div>
+
+</body>
+
+</html>
