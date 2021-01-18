@@ -40,6 +40,7 @@ namespace VirtualQR
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            this.Title += String.Format("  {0}", versionString());
             svr.cbExit = this.closeWnd;
             svr.start();
             scanNetInterface();
@@ -211,5 +212,33 @@ namespace VirtualQR
         {
             scanNetInterface();
         }
+
+        public string versionString()
+        {
+            string fullVer;
+            Version ver = typeof(App).Assembly.GetName().Version;
+            int v1 = ver.Major;
+            int v2 = ver.Minor;
+            int v3 = ver.Build;
+            int v4 = ver.Revision;
+
+            if (v4 > 0)
+            {
+                string strSpecial = "alpha";
+                int nStartBeta = 1000;
+                if (v4 > nStartBeta)
+                {
+                    strSpecial = "beta";
+                    v4 -= nStartBeta;
+                }
+                fullVer = String.Format(App.APP_SPECIAL, v1, v2, v3, v4, strSpecial);
+            }
+            else
+            {
+                fullVer = String.Format(App.APP_NORMAL, v1, v2, v3);
+            }
+            return fullVer;
+        }
+
     } // end - class MainWindow
 }
